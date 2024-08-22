@@ -30,6 +30,20 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+router.post('/profile', security.authenticateDoctor, async(req, res) => {
+    try {
+        const doctor = await Doctor.findOne(
+            { uId: req.doctor.doctor_id },
+            'uId name specialty experience success_rate patient_feedback'
+        );
+        if (!doctor) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.status(200).json(appointments);
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 router.post('/appointments', security.authenticateDoctor ,async (req, res) => {
     try {
         const doctor = await Doctor.findOne({ uId: req.doctor.doctor_id });
