@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Patient = require('../db_models/Patient');
-const  {appointment, cancelAppointment, getAllAppointments} = require('../appointment_handler/Handler')
+const  {appointment, em_appointment, cancelAppointment, getAllAppointments} = require('../appointment_handler/Handler')
 const security = new (require('../utils/security'));
 const utils = new (require('../utils/utils'));
 
@@ -94,13 +94,20 @@ router.post('/appointment', security.authenticateToken ,async (req, res) => {
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
-    const {slot, current_symptoms } = req.body;
-    // if (!(slot.requestedDate && stot.timeRange) || !current_symptoms) {
-    //   return res.status(400).json({ message: 'Time Slots And Patient Case required' });
-    // }
-    const {status, data} = await appointment(patient, slot, current_symptoms);
-
+    const {slot, current_symptoms, type } = req.body;
+    let status, data;
+    switch(type) {
+      case 1:
+        ({status, data} = await appointment(patient, slot, current_symptoms));
+        break;
+      case 0:
+        ({status, data} = await em_appointment(patient));
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid appointment type", data: null });
+    }
     res.status(status).json({ message: data.msg, data: data.appointment });
+
   } catch(error) {
     res.status(500).json({ message: 'Internal server error: '+error });
   }
