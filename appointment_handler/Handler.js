@@ -76,9 +76,8 @@ const appointment = async (patient, slot, current_symptoms) => {
     const [requestedStartTime, requestedEndTime] = slot.timeRange.split('-');
    
     const endDateTime = new Date(`${requestedDate}T${requestedEndTime}:00.000Z`);
-    console.log(endDateTime);
     const currentDateTime = new Date();
-    console.log(currentDateTime);
+    
     if (currentDateTime > endDateTime) {
         console.log(currentDateTime);
         return {
@@ -95,7 +94,7 @@ const appointment = async (patient, slot, current_symptoms) => {
         severity,
         minExperience,
         minSuccessRate,
-        minFeedbackScore
+        minFeedbackScore 
     } = await getCaseRequiremnt(patient, current_symptoms);
 
     if (status !== 200) {
@@ -126,7 +125,7 @@ const appointment = async (patient, slot, current_symptoms) => {
         experience: { $gte: minExperience },
         success_rate: { $gte: minSuccessRate },
         patient_feedback: { $gte: minFeedbackScore },
-        distanceFromHospital: { $lte: 2 },
+        // distanceFromHospital: { $lte: 2 },
         'schedule': {
             $elemMatch: {
                 date: { $eq: slot.requestedDate },
@@ -200,12 +199,151 @@ const appointment = async (patient, slot, current_symptoms) => {
     };
 }
 
+const em_appointment = async (patient) => {
+
+    const existingAppointment = await Appointment.findOne({
+        patientId: patient._id,
+        status: 'Emergency'
+    });
+
+    if (existingAppointment) {
+        return {
+            status: 400, data: {
+                msg: 'You already have a Emergency Appointment',
+            },
+        };
+    }
+
+    const currentTime = new Date();
+    // Extract date in YYYY-MM-DD format
+    const formattedDate = currentTime.toISOString().split('T')[0];
+    const currentHours = currentTime.getUTCHours();
+    const currentMinutes = currentTime.getUTCMinutes();
+    const roundToNextHour = (hours, minutes) => {
+        return minutes > 0 ? hours + 1 : hours;
+    };
+    const formatTime = (hours) => {
+        const formattedHours = hours.toString().padStart(2, '0');
+        return `${formattedHours}:00`;
+    };
+      
+    const startHour = roundToNextHour(currentHours, currentMinutes);
+    const endHour = startHour + 1;
+
+    let savedAppointment;
+    
+    let doctor = await Doctor.findOne({
+        availability: true,
+        specialty: "General Medicine",
+        experience: { $gte: 5 },
+        success_rate: { $gte: 60 },
+        patient_feedback: { $gte: 2 },
+        distanceFromHospital: { $lte: 2 },
+        'schedule': {
+            $elemMatch: {
+                date: { $eq: formattedDate },
+                'slots': {
+                    $elemMatch: {
+                        startTime: formatTime(startHour),
+                        endTime: formatTime(endHour),
+                        isAvailable: true
+                    }
+                }
+            }
+        }
+    },'-pass');
+
+    if (doctor) {
+        const slotDate = doctor.schedule.find(s => s.date === formattedDate);
+        const availableSlot = slotDate.slots.find(s => s.startTime === formatTime(startHour) && s.endTime === formatTime(endHour) && s.isAvailable);
+        // console.log(availableSlot);
+
+        const newAppointment = new Appointment({
+            patientName: patient.name,
+            patientPhone: patient.phone,
+            patientId: patient._id, 
+            doctorId: doctor._id,
+            status: 'Emergency',
+            slots: {
+                date: formattedDate,
+                startTime: formatTime(startHour),
+                endTime: formatTime(endHour),
+            },
+            case: {
+                current_symptoms: "Emergency Case",
+                required_specialty: "General Medicine",
+                doctorStatement: 'None',
+            },
+        });
+        savedAppointment = await newAppointment.save();
+
+        availableSlot.isAvailable = false;
+        availableSlot.appointmentId = savedAppointment._id;
+
+        await Doctor.findOneAndUpdate(
+            { _id: doctor._id, 'schedule.date': formattedDate },
+            { $set: { 'schedule.$.slots': slotDate.slots } },
+            { new: true, runValidators: true }
+        );
+        console.log(savedAppointment)
+
+    } else {   
+        doctor = await Doctor.findOne({
+            availability: true,
+            specialty: "General Medicine",
+            experience: { $gte: 5 },
+            success_rate: { $gte: 60 },
+            patient_feedback: { $gte: 2 },
+            distanceFromHospital: { $lte: 2 },
+        },'-pass');
+
+        const newAppointment = new Appointment({
+            patientName: patient.name,
+            patientPhone: patient.phone,
+            patientId: patient._id, 
+            doctorId: doctor._id,
+            status: 'Emergency',
+            slots: {
+                date: formattedDate,
+                startTime: formatTime(startHour),
+                endTime: formatTime(endHour),
+            },
+            case: {
+                current_symptoms: "Emergency Case",
+                required_specialty: "General Medicine",
+                doctorStatement: 'None',
+            },
+        });
+        savedAppointment = await newAppointment.save();
+        
+    }
+
+    return {
+        status: 200,
+        data: {
+            appointment: {
+                appointment_id: savedAppointment._id,
+                doctor_name: doctor.name,
+                doctor_specialty: doctor.specialty,
+                doctor_id: doctor._id,
+                slot: {
+                    date: formattedDate,
+                    time: `${formatTime(startHour)}-${formatTime(endHour)}`,
+                },
+                status: 'Pending',
+            },
+            msg: 'Emergency Appointment booked successfully',
+        },
+    };
+}
+
+
 
 const cancelAppointment = async (patientId, appointmentId) => {
     const appointment = await Appointment.findOne({
         _id: appointmentId,
         patientId: patientId,
-        status: 'Pending'
+        status:  { $in: ['Pending', 'Emergency'] }
     });
     if (!appointment) {
         return {
@@ -287,4 +425,4 @@ const getAllAppointments = async (patient_Id) => {
 };
 
   
-module.exports = { appointment, cancelAppointment, getAllAppointments };
+module.exports = { appointment,em_appointment, cancelAppointment, getAllAppointments };
