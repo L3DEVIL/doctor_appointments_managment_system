@@ -50,20 +50,32 @@
             <section id="appointment">
                 <h2>Book Appointment</h2>
                 <form id="appointment-form">
-                    <input type="date" id="appointment-date" required>
-                    <div id="appointment-time" required>
-                        <p></p>
-                        <!-- Buttons will be dynamically added here -->
+                    <label for="appointmentType">Appointment Type:</label>
+                    <select id="appointmentType" name="appointmentType" required>
+                        <option value="normal">Normal</option>
+                        <option value="emergency">Emergency</option>
+                    </select>
+            
+                    <div id="timeSlotField">
+                        <label for="appointment-date">Select Date:</label>
+                        <input type="date" id="appointment-date" name="appointment-date" required>
+                        <div id="appointment-time">
+                            <p>Select Time:</p>
+                            <!-- Buttons will be dynamically added here -->
+                        </div>
+                        <input type="hidden" id="appointment-time-selected" name="appointment-time-selected">
                     </div>
-                    <input type="hidden" id="appointment-time-selected"> <!-- Hidden input for time slot -->
-
-                    <textarea id="appointment-symptoms" placeholder="Current Symptoms" required></textarea>
-                    <div id="symptoms-suggestions" class="suggestions-box"></div>
-
-
+            
+                    <div id="currentSymptomsField">
+                        <label for="appointment-symptoms">Current Symptoms:</label>
+                        <textarea id="appointment-symptoms" name="appointment-symptoms" placeholder="Describe your current symptoms example: Fever or Chest Pain" rows="4"></textarea>
+                        <div id="symptoms-suggestions" class="suggestions-box"></div>
+                    </div>
+            
                     <button type="submit">Book Appointment</button>
                 </form>
             </section>
+            
 
             <!-- <section id="cancel-appointment">
                 <h2>Cancel Appointment</h2>

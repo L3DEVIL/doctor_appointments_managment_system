@@ -21,6 +21,7 @@ section {
     padding: 20px;
     margin: 20px 0;
     border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 form {
@@ -28,11 +29,17 @@ form {
     flex-direction: column;
 }
 
-input, textarea, button {
+label {
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+input, textarea, select, button {
     margin: 10px 0;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 16px;
 }
 
 button {
@@ -46,18 +53,20 @@ button:hover {
     background: #0056b3;
 }
 
-
 #appointment-time {
     margin: 10px 0;
 }
 
 .time-slot-button {
+    display: inline-block;
     margin: 5px;
     padding: 10px;
     border: 1px solid #ccc;
     background-color: #f9f9f9;
     color: #333;
     cursor: pointer;
+    border-radius: 4px;
+    text-align: center;
 }
 
 .time-slot-button.selected {
@@ -69,7 +78,6 @@ button:hover {
     background-color: #e9ecef;
 }
 
-
 .suggestions-box {
     position: absolute;
     background-color: #fff;
@@ -78,7 +86,8 @@ button:hover {
     max-height: 150px;
     overflow-y: auto;
     z-index: 1000;
-    /* width: 100%; */
+    width: calc(100% - 22px); /* Adjust width considering padding and border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .suggestion-item {
@@ -88,4 +97,19 @@ button:hover {
 
 .suggestion-item:hover {
     background-color: #f0f0f0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+
+    form {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
 }

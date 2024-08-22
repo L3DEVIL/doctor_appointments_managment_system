@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const apiUrl = 'http://127.0.0.1:5000/app'; // Replace with your API URL
+    const apiUrl = 'http://192.168.29.213:5000/app'; // Replace with your API URL
 
 
 
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div>
                             <strong>Status:</strong> ${app.status}
                         </div>
-                        ${app.status === 'Pending' ? `<button class="cancel-button" data-id="${app._id}">Cancel Appointment</button>` : ''}
+                        ${app.status === 'Pending' || app.status === 'Emergency' ? `<button class="cancel-button" data-id="${app._id}">Cancel Appointment</button>` : ''}
                         <hr>
                     `;
                     appointmentsList.appendChild(li);
@@ -308,6 +308,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             suggestionsBox.innerHTML = '';
         }
     });
+
+    document.getElementById('appointmentType').addEventListener('change', function() {
+        const appointmentType = this.value;
+        const timeSlotField = document.getElementById('timeSlotField');
+        const currentSymptomsField = document.getElementById('currentSymptomsField');
+
+        const appointmentDate = document.getElementById("appointment-date");
+        const appoitmentTime  = document.getElementById("appointment-time");
+        const currentSymptoms = document.getElementById("appointment-symptoms");
+      
+      
+      
+        if (appointmentType === 'emergency') {
+          timeSlotField.style.display = 'none';
+          currentSymptomsField.style.display = 'none';
+          appointmentDate.removeAttribute("required");
+          appoitmentTime.removeAttribute("required");
+          currentSymptoms.removeAttribute("required");
+
+        } else {
+          timeSlotField.style.display = 'block';
+          currentSymptomsField.style.display = 'block';
+          appointmentDate.setAttribute("required", "required");
+          appoitmentTime.setAttribute("required", "required");
+          currentSymptoms.setAttribute("required", "required");
+        }
+      });
+      
     
 
     // Handle Appointment Form Submission
@@ -316,13 +344,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         const date = document.getElementById('appointment-date').value;
         const timeRange = document.getElementById('appointment-time-selected').value;
         const symptoms = document.getElementById('appointment-symptoms').value;
+        const appointmentType = document.getElementById('appointmentType').value;
 
-        if (!date || !timeRange || !symptoms) {
-            alert('Please fill all the required fields');
+        let type = 1; let slot; symptoms.value = "Emergency";
+
+        if (!appointmentType) {
+            alert('Appointment type is required');
             return;
         }
 
-        const slot = {
+        
+        if (appointmentType === 'emergency') { 
+            slot = {};
+            symptoms.value = "Emergency";
+            type = 0;
+        }
+        else {
+            if (!date || !timeRange || !symptoms) {
+                alert('Please fill all the required fields');
+                return;
+            }
+        }
+
+        slot = {
             requestedDate : date,
             timeRange : timeRange
         }
@@ -337,7 +381,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 body: JSON.stringify({
                     slot: slot,
-                    current_symptoms: symptoms
+                    current_symptoms: symptoms,
+                    type: type
                 })
             });
 
