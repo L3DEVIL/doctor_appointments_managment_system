@@ -352,34 +352,39 @@ const cancelAppointment = async (patientId, appointmentId) => {
             },
         };
     }
+
+    let type = appointment.status == 'Pending' ? true : false;
     appointment.status = 'Cancelled';
     await appointment.save();
 
-    // Find the doctor associated with the appointment
-    const doctor = await Doctor.findById(appointment.doctorId);
-    if (!doctor) {
-        return {
-            status: 404, data: {  msg: 'Doctor not found' },
-        };
-    }
+    if (type) {
+        // Find the doctor associated with the appointment
+        const doctor = await Doctor.findById(appointment.doctorId);
+        if (!doctor) {
+            return {
+                status: 404, data: {  msg: 'Doctor not found' },
+            };
+        }
 
-    const slotDateIndex = doctor.schedule.findIndex(s => moment(s.date).isSame(appointment.slots.date, 'day'));
-    if (slotDateIndex === -1) {
-        return {
-                status: 404, data: { msg: 'Date not found in doctor schedule' },
-        };
+        const slotDateIndex = doctor.schedule.findIndex(s => moment(s.date).isSame(appointment.slots.date, 'day'));
+        if (slotDateIndex === -1) {
+            return {
+                    status: 404, data: { msg: 'Date not found in doctor schedule' },
+            };
+        }
+        const slotIndex = doctor.schedule[slotDateIndex].slots.findIndex(s =>
+            s.startTime === appointment.slots.startTime && s.endTime === appointment.slots.endTime
+        );
+        if (slotIndex === -1) {
+            return {
+                status: 404, data: { msg: 'Time slot not found in doctor schedule' },
+            };
+        }
+        doctor.schedule[slotDateIndex].slots[slotIndex].isAvailable = true;
+        doctor.schedule[slotDateIndex].slots[slotIndex].appointmentId = null;
+        await doctor.save();
     }
-    const slotIndex = doctor.schedule[slotDateIndex].slots.findIndex(s =>
-        s.startTime === appointment.slots.startTime && s.endTime === appointment.slots.endTime
-    );
-    if (slotIndex === -1) {
-        return {
-             status: 404, data: { msg: 'Time slot not found in doctor schedule' },
-        };
-    }
-    doctor.schedule[slotDateIndex].slots[slotIndex].isAvailable = true;
-    doctor.schedule[slotDateIndex].slots[slotIndex].appointmentId = null;
-    await doctor.save();
+    
 
     // Return success response
     return {
