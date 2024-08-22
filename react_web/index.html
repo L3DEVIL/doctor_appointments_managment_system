@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Patient Management System</h1>
+
+        <!-- Screen for not logged-in users -->
+        <section id="not-logged-in">
+            <section id="signup">
+                <h2>Sign Up</h2>
+                <form id="signup-form">
+                    <input type="text" id="signup-name" placeholder="Name" required><br><br>        
+                    <input type="text" id="signup-age" placeholder="Age" required>
+                    <input type="text" id="signup-gender" placeholder="Gender" required>
+                    <input type="text" id="signup-medical-history" placeholder="Medical History" required>
+                    <input type="text" id="signup-phone" placeholder="Phone" required>
+                    <input type="password" id="signup-pass" placeholder="Password" required>
+                    <button type="submit">Sign Up</button>
+                </form>
+            </section>
+
+            <section id="login">
+                <h2>Login</h2>
+                <form id="login-form">
+                    <input type="text" id="login-patient-id" placeholder="Patient ID" required>
+                    <input type="password" id="login-pass" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                </form>
+            </section>
+        </section>
+
+        <!-- Screen for logged-in users -->
+        <section id="logged-in" style="display: none;">
+            <section id="Patient">
+                <div id="profile">
+                    <p><strong>Name:</strong> <span id="name"></span></p>
+                    <p><strong>Age:</strong> <span id="age"></span></p>
+                    <p><strong>Gender:</strong> <span id="gender"></span></p>
+                    <p><strong>Medical History:</strong> <span id="medical_history"></span></p>
+                    <p><strong>Phone:</strong> <span id="phone"></span></p>
+                </div>
+            </section>
+            
+            <section id="appointment">
+                <h2>Book Appointment</h2>
+                <form id="appointment-form">
+                    <input type="date" id="appointment-date" required>
+                    <div id="appointment-time" required>
+                        <p></p>
+                        <!-- Buttons will be dynamically added here -->
+                    </div>
+                    <input type="hidden" id="appointment-time-selected"> <!-- Hidden input for time slot -->
+
+                    <textarea id="appointment-symptoms" placeholder="Current Symptoms" required></textarea>
+                    <div id="symptoms-suggestions" class="suggestions-box"></div>
+
+
+                    <button type="submit">Book Appointment</button>
+                </form>
+            </section>
+
+            <!-- <section id="cancel-appointment">
+                <h2>Cancel Appointment</h2>
+                <form id="cancel-appointment-form">
+                    <input type="text" id="cancel-appointment-id" placeholder="Appointment ID" required>
+                    <button type="submit">Cancel Appointment</button>
+                </form>
+            </section> -->
+
+            <section id="all-appointments">
+                <h2>All Appointments</h2>
+                <!-- <button id="fetch-appointments">Fetch Appointments</button> -->
+                <ul id="appointments-list"></ul>
+            </section>
+
+
+            <section id="logout" >
+                <button id="logoutBtn">Logout</button>
+            </section>
+
+            <!-- <section id="slots"> -->
+                <!-- <h2>Available Slots</h2> -->
+                <!-- <button id="fetch-slots">Fetch Slots</button> -->
+                <!-- <ul id="slots-list"></ul> -->
+            <!-- </section> -->
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

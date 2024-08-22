@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Learning Models for Doctor and Patient Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #bbb 1px solid;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            text-align: center;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        h2 {
+            color: #333;
+        }
+        code {
+            background: #e2e2e2;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #e2e2e2;
+            padding: 10px;
+            border-radius: 3px;
+            overflow: auto;
+        }
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        li {
+            margin: 10px 0;
+        }
+        footer {
+            padding: 20px;
+            background: #333;
+            color: #fff;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Machine Learning Models for Doctor and Patient Data</h1>
+        </div>
+    </header>
+    <div class="container">
+        <section>
+            <h2>Overview</h2>
+            <p>This repository contains a Python script that trains and evaluates machine learning models to predict various attributes related to doctors and patient cases. The script utilizes the <code>RandomForest</code> algorithm for both classification and regression tasks.</p>
+        </section>
+
+        <section>
+            <h2>Prerequisites</h2>
+            <p>Before running the script, ensure you have the following Python packages installed:</p>
+            <ul>
+                <li><code>pandas</code></li>
+                <li><code>numpy</code></li>
+                <li><code>scikit-learn</code></li>
+                <li><code>joblib</code></li>
+                <li><code>scipy</code></li>
+            </ul>
+            <p>Install the required packages using pip:</p>
+            <pre><code>pip install pandas numpy scikit-learn joblib scipy</code></pre>
+        </section>
+
+        <section>
+            <h2>Data Loading</h2>
+            <p>The script loads two CSV files:</p>
+            <ul>
+                <li><code>doctors_data.csv</code>: Contains data about doctors, including their specialties and experience.</li>
+                <li><code>patient_cases_data.csv</code>: Contains data about patient cases, including symptoms and required specialties.</li>
+            </ul>
+            <p>Ensure these files are located in the same directory as the script, or adjust the file paths in the script accordingly.</p>
+            <pre><code># Load the datasets
+try {
+    doctors_df = pd.read_csv('doctors_data.csv')
+    patients_df = pd.read_csv('patient_cases_data.csv')
+} catch (Exception as e) {
+    print(f"Error loading datasets: {e}")
+    raise
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Data Preprocessing</h2>
+            <h3>Handling Missing Values</h3>
+            <p>Fills missing values in the <code>medical_history</code> column with the string 'No History':</p>
+            <pre><code>df['medical_history'].fillna('No History', inplace=True)</code></pre>
+
+            <h3>One-Hot Encoding</h3>
+            <p>Encodes categorical features such as <code>gender</code>, <code>current_symptoms</code>, and <code>medical_history</code> into one-hot encoded columns:</p>
+            <pre><code>df_encoded = pd.get_dummies(df, columns=['gender', 'current_symptoms', 'medical_history'])</code></pre>
+        </section>
+
+        <section>
+            <h2>Feature and Target Definition</h2>
+            <h3>Features</h3>
+            <p>Defines features for the models, including one-hot encoded columns and <code>age</code>:</p>
+            <pre><code>X = df_encoded[['age'] +
+               [col for col in df_encoded.columns if 'gender_' in col] +
+               [col for col in df_encoded.columns if 'current_symptoms_' in col] +
+               [col for col in df_encoded.columns if 'medical_history_' in col]]</code></pre>
+
+            <h3>Targets</h3>
+            <p>Defines targets for the classification and regression tasks:</p>
+            <pre><code>y_specialty = df_encoded['required_specialty']
+y_severity = df_encoded['severity']
+y_experience = df_encoded['experience_years']
+y_success_rate = df_encoded['success_rate']
+y_feedback = df_encoded['patient_feedback']</code></pre>
+        </section>
+
+        <section>
+            <h2>Data Splitting</h2>
+            <p>Splits the data into training and testing sets. Each target variable has its own split:</p>
+            <pre><code>X_train, X_test, y_train_spec, y_test_spec = train_test_split(X, y_specialty, test_size=0.2, random_state=42)
+X_train, X_test, y_train_sev, y_test_sev = train_test_split(X, y_severity, test_size=0.2, random_state=42)
+X_train, X_test, y_train_exp, y_test_exp = train_test_split(X, y_experience, test_size=0.2, random_state=42)
+X_train, X_test, y_train_succ, y_test_succ = train_test_split(X, y_success_rate, test_size=0.2, random_state=42)
+X_train, X_test, y_train_feed, y_test_feed = train_test_split(X, y_feedback, test_size=0.2, random_state=42)</code></pre>
+        </section>
+
+        <section>
+            <h2>Feature Scaling</h2>
+            <p>Standardizes features using <code>StandardScaler</code> to ensure they are on a similar scale:</p>
+            <pre><code>scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)</code></pre>
+        </section>
+
+        <section>
+            <h2>Model Training and Hyperparameter Tuning</h2>
+            <h3>Classification Model</h3>
+            <p>Tunes a <code>RandomForestClassifier</code> to predict doctor specialties:</p>
+            <pre><code>param_dist_classifier = {
+    'n_estimators': randint(50, 200),
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': randint(2, 10)
+}
+
+clf = RandomForestClassifier(random_state=42)
+random_search_clf = RandomizedSearchCV(clf, param_distributions=param_dist_classifier, n_iter=10, cv=3, scoring='accuracy', verbose=3, n_jobs=-1, random_state=42)
+random_search_clf.fit(X_train_scaled, y_train_spec)
+best_clf = random_search_clf.best_estimator_</code></pre>
+
+            <h3>Regression Models</h3>
+            <p>Tunes <code>RandomForestRegressor</code> models to predict patient severity, doctor experience, success rates, and patient feedback:</p>
+            <pre><code>def tune_regressor(name, regressor, y_train):
+    random_search = RandomizedSearchCV(regressor, param_distributions=param_dist_regressor, n_iter=10, cv=3, scoring='neg_mean_squared_error', verbose=3, n_jobs=-1, random_state=42)
+    random_search.fit(X_train_scaled, y_train)
+    best_regressor = random_search.best_estimator_
+    return best_regressor
+
+reg_severity = tune_regressor('Severity', RandomForestRegressor(random_state=42), y_train_sev)
+reg_experience = tune_regressor('Experience', RandomForestRegressor(random_state=42), y_train_exp)
+reg_success = tune_regressor('Success Rate', RandomForestRegressor(random_state=42), y_train_succ)
+reg_feedback = tune_regressor('Feedback', RandomForestRegressor(random_state=42), y_train_feed)</code></pre>
+        </section>
+
+        <section>
+            <h2>Model Saving</h2>
+            <p>Saves the trained models and scaler to disk using <code>joblib</code>:</p>
+            <pre><code>def save_model(model, name):
+    joblib.dump(model, f'{name}.pkl')
+    
+    save_model(best_clf, 'best_specialty_classifier')
+    save_model(reg_severity, 'best_severity_regressor')
+    save_model(reg_experience, 'best_experience_regressor')
+    save_model(reg_success, 'best_success_regressor')
+    save_model(reg_feedback, 'best_feedback_regressor')
+    joblib.dump(scaler, 'scaler.pkl')</code></pre>
+                <p>This function saves each trained model and the scaler object to disk as a pickle (.pkl) file. The file names are determined by the <code>name</code> parameter provided when calling the function.</p>
+            </section>
+    
+            <section>
+                <h2>Model Evaluation</h2>
+                <h3>Classification Model Evaluation</h3>
+                <p>The specialty classifier is evaluated to determine its accuracy on the test set. The accuracy score provides a measure of how well the model performs in predicting the required specialty:</p>
+                <pre><code>y_pred_spec = best_clf.predict(X_test_scaled)
+    accuracy = accuracy_score(y_test_spec, y_pred_spec)
+    print(f"Specialty Classification Accuracy: {accuracy:.4f}")</code></pre>
+                <p>Here, <code>y_pred_spec</code> contains the predicted values, and <code>accuracy_score</code> computes the accuracy of the classifier against the true labels <code>y_test_spec</code>.</p>
+    
+                <h3>Regression Models Evaluation</h3>
+                <p>The performance of the regression models is assessed using Mean Squared Error (MSE), which measures the average squared difference between predicted and actual values:</p>
+                <pre><code>y_pred_sev = reg_severity.predict(X_test_scaled)
+    y_pred_exp = reg_experience.predict(X_test_scaled)
+    y_pred_succ = reg_success.predict(X_test_scaled)
+    y_pred_feed = reg_feedback.predict(X_test_scaled)
+    
+    mse_severity = mean_squared_error(y_test_sev, y_pred_sev)
+    mse_experience = mean_squared_error(y_test_exp, y_pred_exp)
+    mse_success_rate = mean_squared_error(y_test_succ, y_pred_succ)
+    mse_feedback = mean_squared_error(y_test_feed, y_pred_feed)
+    
+    print(f"Severity MSE: {mse_severity:.4f}")
+    print(f"Experience MSE: {mse_experience:.4f}")
+    print(f"Success Rate MSE: {mse_success_rate:.4f}")
+    print(f"Feedback MSE: {mse_feedback:.4f}")</code></pre>
+                <p>Each MSE value represents the model's prediction error for a specific target. Lower MSE values indicate better model performance.</p>
+            </section>
+    
+        </div>
+    
+        <footer>
+            <p>&copy; 2024 Machine Learning Models for Doctor and Patient Data. All rights reserved.</p>
+        </footer>
+    </body>
+    </html>
+    
