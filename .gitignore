@@ -13,7 +13,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Environment variables
-.env
 dev.txt
 
 # Optional npm cache directory
