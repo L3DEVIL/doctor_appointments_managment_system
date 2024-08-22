@@ -4,7 +4,15 @@ const Doctor = require('../db_models/Doctors');
 const utils = new (require('../utils/utils'));
 class SocketManager {
     constructor(server) {
-        this.io = socketIO(server);
+        this.io = socketIO(server, {
+            cors : {
+                origin: "*",
+                methods: ["GET", "POST"],
+                credentials: true,
+                transports: ["websocket", "polling"]
+            },
+            allowEIO3: true
+        });
         this.init();
     }
 
